@@ -3,13 +3,16 @@ use std::io::{BufReader, Write};
 use skia_safe::{Canvas, Color, EncodedImageFormat, Size, surfaces};
 use skia_safe::svg::{Dom as SvgDom};
 
+const WIDTH: i32 = 1080;
+const HEIGHT: i32 = 1920;
+
 fn main() {
-    png_test();
+    pdf_test();
 }
 
 pub fn png_test() {
     if let Some(mut surface) =
-        surfaces::raster_n32_premul((1080, 1920))
+        surfaces::raster_n32_premul((WIDTH, HEIGHT))
     {
         draw(surface.canvas());
         let image = surface.image_snapshot();
@@ -24,7 +27,7 @@ pub fn png_test() {
 
 pub fn pdf_test() {
     let document = skia_safe::pdf::new_document(None);
-    let mut page = document.begin_page(Size::new(1080.0, 1920.0), None);
+    let mut page = document.begin_page(Size::new(WIDTH as f32, HEIGHT as f32), None);
     draw(page.canvas());
     let data = page.end_page().close();
     let mut file = File::create("./output.pdf").unwrap();
@@ -35,6 +38,7 @@ fn draw(canvas: &mut Canvas) {
     canvas.clear(Color::WHITE);
     let file = File::open("./pinocchio.svg").unwrap();
     let reader = BufReader::new(file);
-    let svg = SvgDom::read(reader).unwrap();
+    let mut svg = SvgDom::read(reader).unwrap();
+    svg.set_container_size((WIDTH, HEIGHT));
     svg.render(canvas);
 }
